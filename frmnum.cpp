@@ -2,7 +2,7 @@
 #include "ui_frmnum.h"
 #include "qdesktopwidget.h"
 
-frmNum *frmNum::_instance = 0;
+frmNum *frmNum::_m_instance = 0;
 frmNum::frmNum(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::frmNum)
@@ -19,15 +19,15 @@ frmNum::~frmNum()
 }
 
 void frmNum::Init(QString style, int fontSize) {
-    this->currentStyle = style;
-    this->currentFontSize = fontSize;
+    this->m_currentStyle = style;
+    this->m_currentFontSize = fontSize;
     this->ChangeStyle();
 }
 
 void frmNum::mouseMoveEvent(QMouseEvent *e)
 {
-    if (mousePressed && (e->buttons() && Qt::LeftButton)) {
-        this->move(e->globalPos() - mousePoint);
+    if (m_mousePressed && (e->buttons() && Qt::LeftButton)) {
+        this->move(e->globalPos() - m_mousePoint);
         e->accept();
     }
 }
@@ -35,40 +35,40 @@ void frmNum::mouseMoveEvent(QMouseEvent *e)
 void frmNum::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton) {
-        mousePressed = true;
-        mousePoint = e->globalPos() - this->pos();
+        m_mousePressed = true;
+        m_mousePoint = e->globalPos() - this->pos();
         e->accept();
     }
 }
 
 void frmNum::mouseReleaseEvent(QMouseEvent *)
 {
-    mousePressed = false;
+    m_mousePressed = false;
 }
 
 void frmNum::InitForm()
 {
-    this->mousePressed = false;
+    this->m_mousePressed = false;
     this->setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 
     QDesktopWidget w;
-    deskWidth = w.availableGeometry().width();
-    deskHeight = w.availableGeometry().height();
-    frmWidth = this->width();
-    frmHeight = this->height();
+    m_deskWidth = w.availableGeometry().width();
+    m_deskHeight = w.availableGeometry().height();
+    m_frmWidth = this->width();
+    m_frmHeight = this->height();
 
-    isFirst = true;
-    isPress = false;
-    timerPress = new QTimer(this);
-    connect(timerPress, SIGNAL(timeout()), this, SLOT(reClicked()));
-    currentWidget = 0;
+    m_isFirst = true;
+    m_isPress = false;
+    m_timerPress = new QTimer(this);
+    connect(m_timerPress, SIGNAL(timeout()), this, SLOT(reClicked()));
+    m_currentWidget = 0;
 
     //如果需要更改输入法面板的样式,改变currentStyle这个变量即可
     //blue--淡蓝色  dev--dev风格  black--黑色  brown--灰黑色  lightgray--浅灰色  darkgray--深灰色  gray--灰色  silvery--银色
-    currentStyle = "";
+    m_currentStyle = "";
 
     //输入法面板字体大小,如果需要更改面板字体大小,该这里即可
-    currentFontSize = 10;
+    m_currentFontSize = 10;
 
     QList<QPushButton *> btn = this->findChildren<QPushButton *>();
     foreach (QPushButton * b, btn) {
@@ -115,7 +115,7 @@ void frmNum::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
         //为此,增加判断,当焦点是从有对象转为无对象再转为有对象时不要显示.
         //这里又要多一个判断,万一首个窗体的第一个焦点就是落在可输入的对象中,则要过滤掉
 #ifndef __arm__
-        if (oldWidget == 0x0 && !isFirst) {
+        if (oldWidget == 0x0 && !m_isFirst) {
             QTimer::singleShot(0, this, SLOT(hide()));
             return;
         }
@@ -127,29 +127,29 @@ void frmNum::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
             return;
         }
 
-        isFirst = false;
+        m_isFirst = false;
         if (nowWidget->inherits("QLineEdit")) {
-            currentLineEdit = (QLineEdit *)nowWidget;
-            currentEditType = "QLineEdit";
+            m_currentLineEdit = (QLineEdit *)nowWidget;
+            m_currentEditType = "QLineEdit";
             ShowPanel();
         } else if (nowWidget->inherits("QTextEdit")) {
-            currentTextEdit = (QTextEdit *)nowWidget;
-            currentEditType = "QTextEdit";
+            m_currentTextEdit = (QTextEdit *)nowWidget;
+            m_currentEditType = "QTextEdit";
             ShowPanel();
         } else if (nowWidget->inherits("QPlainTextEdit")) {
-            currentPlain = (QPlainTextEdit *)nowWidget;
-            currentEditType = "QPlainTextEdit";
+            m_currentPlain = (QPlainTextEdit *)nowWidget;
+            m_currentEditType = "QPlainTextEdit";
             ShowPanel();
         } else if (nowWidget->inherits("QTextBrowser")) {
-            currentBrowser = (QTextBrowser *)nowWidget;
-            currentEditType = "QTextBrowser";
+            m_currentBrowser = (QTextBrowser *)nowWidget;
+            m_currentEditType = "QTextBrowser";
             ShowPanel();
         } else if (nowWidget->inherits("QComboBox")) {
             QComboBox *cbox = (QComboBox *)nowWidget;
             //只有当下拉选择框处于编辑模式才可以输入
             if (cbox->isEditable()) {
-                currentLineEdit = cbox->lineEdit() ;
-                currentEditType = "QLineEdit";
+                m_currentLineEdit = cbox->lineEdit() ;
+                m_currentEditType = "QLineEdit";
                 ShowPanel();
             }
         } else if (nowWidget->inherits("QSpinBox") ||
@@ -157,16 +157,16 @@ void frmNum::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
                    nowWidget->inherits("QDateEdit") ||
                    nowWidget->inherits("QTimeEdit") ||
                    nowWidget->inherits("QDateTimeEdit")) {
-            currentWidget = nowWidget;
-            currentEditType = "QWidget";
+            m_currentWidget = nowWidget;
+            m_currentEditType = "QWidget";
             ShowPanel();
         } else {
-            currentWidget = 0;
-            currentLineEdit = 0;
-            currentTextEdit = 0;
-            currentPlain = 0;
-            currentBrowser = 0;
-            currentEditType = "";
+            m_currentWidget = 0;
+            m_currentLineEdit = 0;
+            m_currentTextEdit = 0;
+            m_currentPlain = 0;
+            m_currentBrowser = 0;
+            m_currentEditType = "";
             this->setVisible(false);
         }
 
@@ -176,21 +176,21 @@ void frmNum::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
 
         int x = pos.x();
         int y = pos.y();
-        if (pos.x() + frmWidth > deskWidth) {
-            x = deskWidth - frmWidth;
+        if (pos.x() + m_frmWidth > m_deskWidth) {
+            x = m_deskWidth - m_frmWidth;
         }
-        if (pos.y() + frmHeight > deskHeight) {
-            y = pos.y() - frmHeight - rect.height() - 35;
+        if (pos.y() + m_frmHeight > m_deskHeight) {
+            y = pos.y() - m_frmHeight - rect.height() - 35;
         }
 
-        this->setGeometry(x, y, frmWidth, frmHeight);
+        this->setGeometry(x, y, m_frmWidth, m_frmHeight);
     }
 }
 
 bool frmNum::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonPress) {
-        if (currentEditType != "") {
+        if (m_currentEditType != "") {
             if (obj != ui->btnClose) {
                 QString objName = obj->objectName();
                 if (!obj->property("noinput").toBool() && objName != "frmMainWindow"
@@ -198,18 +198,18 @@ bool frmNum::eventFilter(QObject *obj, QEvent *event)
                     ShowPanel();
                 }
             }
-            btnPress = (QPushButton *)obj;
+            m_btnPress = (QPushButton *)obj;
             if (checkPress()) {
-                isPress = true;
-                timerPress->start(500);
+                m_isPress = true;
+                m_timerPress->start(500);
             }
         }
         return false;
     } else if (event->type() == QEvent::MouseButtonRelease) {
-        btnPress = (QPushButton *)obj;
+        m_btnPress = (QPushButton *)obj;
         if (checkPress()) {
-            isPress = false;
-            timerPress->stop();
+            m_isPress = false;
+            m_timerPress->stop();
         }
         return false;
     }
@@ -219,8 +219,8 @@ bool frmNum::eventFilter(QObject *obj, QEvent *event)
 bool frmNum::checkPress()
 {
     //只有属于数字键盘的合法按钮才继续处理
-    bool num_ok = btnPress->property("btnNum").toBool();
-    bool other_ok = btnPress->property("btnOther").toBool();
+    bool num_ok = m_btnPress->property("btnNum").toBool();
+    bool other_ok = m_btnPress->property("btnOther").toBool();
     if (num_ok || other_ok) {
         return true;
     }
@@ -229,16 +229,16 @@ bool frmNum::checkPress()
 
 void frmNum::reClicked()
 {
-    if (isPress) {
-        timerPress->setInterval(30);
-        btnPress->click();
+    if (m_isPress) {
+        m_timerPress->setInterval(30);
+        m_btnPress->click();
     }
 }
 
 void frmNum::btn_clicked()
 {
     //如果当前焦点控件类型为空,则返回不需要继续处理
-    if (currentEditType == "") {
+    if (m_currentEditType == "") {
         return;
     }
 
@@ -260,71 +260,71 @@ void frmNum::btn_clicked()
 
 void frmNum::insertValue(QString value)
 {
-    if (currentEditType == "QLineEdit") {
-        currentLineEdit->insert(value);
-    } else if (currentEditType == "QTextEdit") {
-        currentTextEdit->insertPlainText(value);
-    } else if (currentEditType == "QPlainTextEdit") {
-        currentPlain->insertPlainText(value);
-    } else if (currentEditType == "QTextBrowser") {
-        currentBrowser->insertPlainText(value);
-    } else if (currentEditType == "QWidget") {
+    if (m_currentEditType == "QLineEdit") {
+        m_currentLineEdit->insert(value);
+    } else if (m_currentEditType == "QTextEdit") {
+        m_currentTextEdit->insertPlainText(value);
+    } else if (m_currentEditType == "QPlainTextEdit") {
+        m_currentPlain->insertPlainText(value);
+    } else if (m_currentEditType == "QTextBrowser") {
+        m_currentBrowser->insertPlainText(value);
+    } else if (m_currentEditType == "QWidget") {
         QKeyEvent keyPress(QEvent::KeyPress, 0, Qt::NoModifier, QString(value));
-        QApplication::sendEvent(currentWidget, &keyPress);
+        QApplication::sendEvent(m_currentWidget, &keyPress);
     }
 }
 
 void frmNum::deleteValue()
 {
-    if (currentEditType == "QLineEdit") {
-        currentLineEdit->backspace();
-    } else if (currentEditType == "QTextEdit") {
+    if (m_currentEditType == "QLineEdit") {
+        m_currentLineEdit->backspace();
+    } else if (m_currentEditType == "QTextEdit") {
         //获取当前QTextEdit光标,如果光标有选中,则移除选中字符,否则删除光标前一个字符
-        QTextCursor cursor = currentTextEdit->textCursor();
+        QTextCursor cursor = m_currentTextEdit->textCursor();
         if(cursor.hasSelection()) {
             cursor.removeSelectedText();
         } else {
             cursor.deletePreviousChar();
         }
-    } else if (currentEditType == "QPlainTextEdit") {
+    } else if (m_currentEditType == "QPlainTextEdit") {
         //获取当前QTextEdit光标,如果光标有选中,则移除选中字符,否则删除光标前一个字符
-        QTextCursor cursor = currentPlain->textCursor();
+        QTextCursor cursor = m_currentPlain->textCursor();
         if(cursor.hasSelection()) {
             cursor.removeSelectedText();
         } else {
             cursor.deletePreviousChar();
         }
-    } else if (currentEditType == "QTextBrowser") {
+    } else if (m_currentEditType == "QTextBrowser") {
         //获取当前QTextEdit光标,如果光标有选中,则移除选中字符,否则删除光标前一个字符
-        QTextCursor cursor = currentBrowser->textCursor();
+        QTextCursor cursor = m_currentBrowser->textCursor();
         if(cursor.hasSelection()) {
             cursor.removeSelectedText();
         } else {
             cursor.deletePreviousChar();
         }
-    } else if (currentEditType == "QWidget") {
+    } else if (m_currentEditType == "QWidget") {
         QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_Delete, Qt::NoModifier, QString());
-        QApplication::sendEvent(currentWidget, &keyPress);
+        QApplication::sendEvent(m_currentWidget, &keyPress);
     }
 }
 
 void frmNum::ChangeStyle()
 {
-    if (currentStyle == "blue") {
+    if (m_currentStyle == "blue") {
         changeStyle("#DEF0FE", "#C0DEF6", "#C0DCF2", "#386487");
-    } else if (currentStyle == "dev") {
+    } else if (m_currentStyle == "dev") {
         changeStyle("#C0D3EB", "#BCCFE7", "#B4C2D7", "#324C6C");
-    } else if (currentStyle == "gray") {
+    } else if (m_currentStyle == "gray") {
         changeStyle("#E4E4E4", "#A2A2A2", "#A9A9A9", "#000000");
-    } else if (currentStyle == "lightgray") {
+    } else if (m_currentStyle == "lightgray") {
         changeStyle("#EEEEEE", "#E5E5E5", "#D4D0C8", "#6F6F6F");
-    } else if (currentStyle == "darkgray") {
+    } else if (m_currentStyle == "darkgray") {
         changeStyle("#D8D9DE", "#C8C8D0", "#A9ACB5", "#5D5C6C");
-    } else if (currentStyle == "black") {
+    } else if (m_currentStyle == "black") {
         changeStyle("#4D4D4D", "#292929", "#D9D9D9", "#CACAD0");
-    } else if (currentStyle == "brown") {
+    } else if (m_currentStyle == "brown") {
         changeStyle("#667481", "#566373", "#C2CCD8", "#E7ECF0");
-    } else if (currentStyle == "silvery") {
+    } else if (m_currentStyle == "silvery") {
         changeStyle("#E1E4E6", "#CCD3D9", "#B2B6B9", "#000000");
     }
 }
@@ -338,7 +338,7 @@ void frmNum::changeStyle(QString topColor, QString bottomColor, QString borderCo
     qss.append(QString("QPushButton:hover{background:qlineargradient(spread:pad,x1:0,y1:0,x2:0,y2:1,stop:0 %1,stop:1 %2);}")
                .arg(topColor).arg(bottomColor));
     qss.append(QString("QLabel,QPushButton{font-size:%1pt;color:%2;}")
-               .arg(currentFontSize).arg(textColor));
+               .arg(m_currentFontSize).arg(textColor));
     qss.append(QString("QPushButton#btnPre,QPushButton#btnNext,QPushButton#btnClose{padding:5px;}"));
     qss.append(QString("QPushButton{border:1px solid %1;background:rgba(0,0,0,0);}")
                .arg(borderColor));

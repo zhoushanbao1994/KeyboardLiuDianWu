@@ -18,6 +18,7 @@ frmMain::~frmMain()
     delete ui;
 }
 
+// 打开框窗体
 void frmMain::on_btnDialog_clicked()
 {
     QDialog *d = new QDialog(this);
@@ -26,12 +27,14 @@ void frmMain::on_btnDialog_clicked()
     d->show();
 }
 
+// 输入框
 void frmMain::on_btnInputDialog_clicked()
 {
     QInputDialog *d = new QInputDialog(this);
     d->show();
 }
 
+// 打开文件对话框
 void frmMain::on_btnFileDialog_clicked()
 {
     QFileDialog *d = new QFileDialog(this);

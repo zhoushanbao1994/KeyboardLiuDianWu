@@ -2,7 +2,7 @@
 #include "ui_frminput.h"
 #include "qdesktopwidget.h"
 
-frmInput *frmInput::_instance = 0;
+frmInput *frmInput::_m_instance = 0;
 frmInput::frmInput(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::frmInput)
@@ -20,18 +20,18 @@ frmInput::~frmInput()
 
 void frmInput::Init(QString position, QString style, int btnFontSize, int labFontSize)
 {
-    this->currentPosition = position;
-    this->currentStyle = style;
-    this->btnFontSize = btnFontSize;
-    this->labFontSize = labFontSize;
+    this->m_currentPosition = position;
+    this->m_currentStyle = style;
+    this->m_btnFontSize = btnFontSize;
+    this->m_labFontSize = labFontSize;
     this->ChangeStyle();
     this->ChangeFont();
 }
 
 void frmInput::mouseMoveEvent(QMouseEvent *e)
 {
-    if (mousePressed && (e->buttons() && Qt::LeftButton)) {
-        this->move(e->globalPos() - mousePoint);
+    if (m_mousePressed && (e->buttons() && Qt::LeftButton)) {
+        this->move(e->globalPos() - m_mousePoint);
         e->accept();
     }
 }
@@ -39,61 +39,61 @@ void frmInput::mouseMoveEvent(QMouseEvent *e)
 void frmInput::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton) {
-        mousePressed = true;
-        mousePoint = e->globalPos() - this->pos();
+        m_mousePressed = true;
+        m_mousePoint = e->globalPos() - this->pos();
         e->accept();
     }
 }
 
 void frmInput::mouseReleaseEvent(QMouseEvent *)
 {
-    mousePressed = false;
+    m_mousePressed = false;
 }
 
 void frmInput::InitForm()
 {
-    this->mousePressed = false;
+    this->m_mousePressed = false;
     this->setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 
     QDesktopWidget w;
-    deskWidth = w.availableGeometry().width();
-    deskHeight = w.availableGeometry().height();
-    frmWidth = this->width();
-    frmHeight = this->height();
+    m_deskWidth = w.availableGeometry().width();
+    m_deskHeight = w.availableGeometry().height();
+    m_frmWidth = this->width();
+    m_frmHeight = this->height();
 
     QSqlDatabase DbConn;
     DbConn = QSqlDatabase::addDatabase("QSQLITE", "py");
     DbConn.setDatabaseName(qApp->applicationDirPath() + "/py.db");
     DbConn.open();
 
-    isFirst = true;
-    isPress = false;
-    timerPress = new QTimer(this);
-    connect(timerPress, SIGNAL(timeout()), this, SLOT(reClicked()));
+    m_isFirst = true;
+    m_isPress = false;
+    m_timerPress = new QTimer(this);
+    connect(m_timerPress, SIGNAL(timeout()), this, SLOT(reClicked()));
 
-    currentWidget = 0;
-    currentLineEdit = 0;
-    currentTextEdit = 0;
-    currentPlain = 0;
-    currentBrowser = 0;
-    currentEditType = "";
+    m_currentWidget = 0;
+    m_currentLineEdit = 0;
+    m_currentTextEdit = 0;
+    m_currentPlain = 0;
+    m_currentBrowser = 0;
+    m_currentEditType = "";
 
     //如果需要更改输入法面板的显示位置,改变currentPosition这个变量即可
     //control--显示在对应输入框的正下方 bottom--填充显示在底部  center--窗体居中显示
-    currentPosition = "";
+    m_currentPosition = "";
 
     //如果需要更改输入法面板的样式,改变currentStyle这个变量即可
     //blue--淡蓝色  dev--dev风格  black--黑色  brown--灰黑色  lightgray--浅灰色  darkgray--深灰色  gray--灰色  silvery--银色
-    currentStyle = "";
+    m_currentStyle = "";
 
     //输入法面板字体大小,如果需要更改面板字体大小,该这里即可
-    btnFontSize = 10;
-    labFontSize = 10;
+    m_btnFontSize = 10;
+    m_labFontSize = 10;
 
     //如果需要更改输入法初始模式,改变currentType这个变量即可
     //min--小写模式  max--大写模式  chinese--中文模式
-    currentType = "min";
-    changeType(currentType);
+    m_currentType = "min";
+    changeType(m_currentType);
 
     QList<QPushButton *> btn = this->findChildren<QPushButton *>();
     foreach (QPushButton * b, btn) {
@@ -175,18 +175,18 @@ void frmInput::InitProperty()
     ui->btny->setProperty("btnLetter", true);
     ui->btnz->setProperty("btnLetter", true);
 
-    labCh.append(ui->labCh0);
-    labCh.append(ui->labCh1);
-    labCh.append(ui->labCh2);
-    labCh.append(ui->labCh3);
-    labCh.append(ui->labCh4);
-    labCh.append(ui->labCh5);
-    labCh.append(ui->labCh6);
-    labCh.append(ui->labCh7);
-    labCh.append(ui->labCh8);
-    labCh.append(ui->labCh9);
+    m_labCh.append(ui->labCh0);
+    m_labCh.append(ui->labCh1);
+    m_labCh.append(ui->labCh2);
+    m_labCh.append(ui->labCh3);
+    m_labCh.append(ui->labCh4);
+    m_labCh.append(ui->labCh5);
+    m_labCh.append(ui->labCh6);
+    m_labCh.append(ui->labCh7);
+    m_labCh.append(ui->labCh8);
+    m_labCh.append(ui->labCh9);
     for (int i = 0; i < 10; i++) {
-        labCh[i]->installEventFilter(this);
+        m_labCh[i]->installEventFilter(this);
     }
 }
 
@@ -229,7 +229,7 @@ bool frmInput::eventFilter(QObject *obj, QEvent *event)
                 setChinese(8);
             } else if (obj == ui->labCh9) {
                 setChinese(9);
-            } else if (currentEditType != "" && obj != ui->btnClose) {
+            } else if (m_currentEditType != "" && obj != ui->btnClose) {
                 QString objName = obj->objectName();
                 if (!obj->property("noinput").toBool() && objName != "frmMainWindow"
                         && objName != "frmInputWindow" && objName != "qt_edit_menu") {
@@ -237,18 +237,18 @@ bool frmInput::eventFilter(QObject *obj, QEvent *event)
                 }
             }
 
-            btnPress = (QPushButton *)obj;
+            m_btnPress = (QPushButton *)obj;
             if (checkPress()) {
-                isPress = true;
-                timerPress->start(500);
+                m_isPress = true;
+                m_timerPress->start(500);
             }
             return false;
         }
     } else if (event->type() == QEvent::MouseButtonRelease) {
-        btnPress = (QPushButton *)obj;
+        m_btnPress = (QPushButton *)obj;
         if (checkPress()) {
-            isPress = false;
-            timerPress->stop();
+            m_isPress = false;
+            m_timerPress->stop();
         }
         return false;
     } else if (event->type() == QEvent::KeyPress) {
@@ -296,23 +296,23 @@ bool frmInput::eventFilter(QObject *obj, QEvent *event)
                 return false;
             }
         } else if (keyEvent->key() == Qt::Key_CapsLock) {
-            if (currentType != "max") {
-                currentType = "max";
+            if (m_currentType != "max") {
+                m_currentType = "max";
             } else {
-                currentType = "min";
+                m_currentType = "min";
             }
-            changeType(currentType);
+            changeType(m_currentType);
             return true;
         } else {
-            if (currentEditType == "QWidget") {
+            if (m_currentEditType == "QWidget") {
                 return false;
             }
             QString key;
-            if (currentType == "chinese") {
+            if (m_currentType == "chinese") {
                 key = keyEvent->text();
-            } else if (currentType == "min") {
+            } else if (m_currentType == "min") {
                 key = keyEvent->text().toLower();
-            } else if (currentType == "max") {
+            } else if (m_currentType == "max") {
                 key = keyEvent->text().toUpper();
             }
             QList<QPushButton *> btn = this->findChildren<QPushButton *>();
@@ -331,9 +331,9 @@ bool frmInput::eventFilter(QObject *obj, QEvent *event)
 bool frmInput::checkPress()
 {
     //只有属于输入法键盘的合法按钮才继续处理
-    bool num_ok = btnPress->property("btnNum").toBool();
-    bool other_ok = btnPress->property("btnOther").toBool();
-    bool letter_ok = btnPress->property("btnLetter").toBool();
+    bool num_ok = m_btnPress->property("btnNum").toBool();
+    bool other_ok = m_btnPress->property("btnOther").toBool();
+    bool letter_ok = m_btnPress->property("btnLetter").toBool();
     if (num_ok || other_ok || letter_ok) {
         return true;
     }
@@ -342,9 +342,9 @@ bool frmInput::checkPress()
 
 void frmInput::reClicked()
 {
-    if (isPress) {
-        timerPress->setInterval(30);
-        btnPress->click();
+    if (m_isPress) {
+        m_timerPress->setInterval(30);
+        m_btnPress->click();
     }
 }
 
@@ -357,7 +357,7 @@ void frmInput::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
         //为此,增加判断,当焦点是从有对象转为无对象再转为有对象时不要显示.
         //这里又要多一个判断,万一首个窗体的第一个焦点就是落在可输入的对象中,则要过滤掉
 #ifndef __arm__
-        if (oldWidget == 0x0 && !isFirst) {
+        if (oldWidget == 0x0 && !m_isFirst) {
             QTimer::singleShot(0, this, SLOT(hide()));
             return;
         }
@@ -369,29 +369,29 @@ void frmInput::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
             return;
         }
 
-        isFirst = false;
+        m_isFirst = false;
         if (nowWidget->inherits("QLineEdit")) {
-            currentLineEdit = (QLineEdit *)nowWidget;
-            currentEditType = "QLineEdit";
+            m_currentLineEdit = (QLineEdit *)nowWidget;
+            m_currentEditType = "QLineEdit";
             ShowPanel();
         } else if (nowWidget->inherits("QTextEdit")) {
-            currentTextEdit = (QTextEdit *)nowWidget;
-            currentEditType = "QTextEdit";
+            m_currentTextEdit = (QTextEdit *)nowWidget;
+            m_currentEditType = "QTextEdit";
             ShowPanel();
         } else if (nowWidget->inherits("QPlainTextEdit")) {
-            currentPlain = (QPlainTextEdit *)nowWidget;
-            currentEditType = "QPlainTextEdit";
+            m_currentPlain = (QPlainTextEdit *)nowWidget;
+            m_currentEditType = "QPlainTextEdit";
             ShowPanel();
         } else if (nowWidget->inherits("QTextBrowser")) {
-            currentBrowser = (QTextBrowser *)nowWidget;
-            currentEditType = "QTextBrowser";
+            m_currentBrowser = (QTextBrowser *)nowWidget;
+            m_currentEditType = "QTextBrowser";
             ShowPanel();
         } else if (nowWidget->inherits("QComboBox")) {
             QComboBox *cbox = (QComboBox *)nowWidget;
             //只有当下拉选择框处于编辑模式才可以输入
             if (cbox->isEditable()) {
-                currentLineEdit = cbox->lineEdit() ;
-                currentEditType = "QLineEdit";
+                m_currentLineEdit = cbox->lineEdit() ;
+                m_currentEditType = "QLineEdit";
                 ShowPanel();
             }
         } else if (nowWidget->inherits("QSpinBox") ||
@@ -399,43 +399,43 @@ void frmInput::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
                    nowWidget->inherits("QDateEdit") ||
                    nowWidget->inherits("QTimeEdit") ||
                    nowWidget->inherits("QDateTimeEdit")) {
-            currentWidget = nowWidget;
-            currentEditType = "QWidget";
+            m_currentWidget = nowWidget;
+            m_currentEditType = "QWidget";
             ShowPanel();
         } else {
             //需要将输入法切换到最初的原始状态--小写,同时将之前的对象指针置为零
-            currentWidget = 0;
-            currentLineEdit = 0;
-            currentTextEdit = 0;
-            currentPlain = 0;
-            currentBrowser = 0;
-            currentEditType = "";
-            currentType = "min";
-            changeType(currentType);
+            m_currentWidget = 0;
+            m_currentLineEdit = 0;
+            m_currentTextEdit = 0;
+            m_currentPlain = 0;
+            m_currentBrowser = 0;
+            m_currentEditType = "";
+            m_currentType = "min";
+            changeType(m_currentType);
             this->setVisible(false);
         }
 
         //根据用户选择的输入法位置设置-居中显示-底部填充-显示在输入框正下方
-        if (currentPosition == "center") {
-            QPoint pos = QPoint(deskWidth / 2 - frmWidth / 2, deskHeight / 2 - frmHeight / 2);
-            this->setGeometry(pos.x(), pos.y(), frmWidth, frmHeight);
-        } else if (currentPosition == "bottom") {
-            this->setGeometry(0, deskHeight - frmHeight, deskWidth, frmHeight);
-        } else if (currentPosition == "control") {
+        if (m_currentPosition == "center") {
+            QPoint pos = QPoint(m_deskWidth / 2 - m_frmWidth / 2, m_deskHeight / 2 - m_frmHeight / 2);
+            this->setGeometry(pos.x(), pos.y(), m_frmWidth, m_frmHeight);
+        } else if (m_currentPosition == "bottom") {
+            this->setGeometry(0, m_deskHeight - m_frmHeight, m_deskWidth, m_frmHeight);
+        } else if (m_currentPosition == "control") {
             QRect rect = nowWidget->rect();
             QPoint pos = QPoint(rect.left(), rect.bottom() + 2);
             pos = nowWidget->mapToGlobal(pos);
 
             int x = pos.x();
             int y = pos.y();
-            if (pos.x() + frmWidth > deskWidth) {
-                x = deskWidth - frmWidth;
+            if (pos.x() + m_frmWidth > m_deskWidth) {
+                x = m_deskWidth - m_frmWidth;
             }
-            if (pos.y() + frmHeight > deskHeight) {
-                y = pos.y() - frmHeight - rect.height() - 35;
+            if (pos.y() + m_frmHeight > m_deskHeight) {
+                y = pos.y() - m_frmHeight - rect.height() - 35;
             }
 
-            this->setGeometry(x, y, frmWidth, frmHeight);
+            this->setGeometry(x, y, m_frmWidth, m_frmHeight);
         }
     }
 }
@@ -502,8 +502,8 @@ void frmInput::selectChinese()
         QStringList text = result.split(" ");
         foreach (QString txt, text) {
             if (txt.length() > 0) {
-                allPY.append(txt);
-                currentPY_count++;
+                m_allPY.append(txt);
+                m_currentPY_count++;
             }
         }
     }
@@ -514,20 +514,20 @@ void frmInput::showChinese()
 {
     //每个版面最多显示10个汉字
     int count = 0;
-    currentPY.clear();
+    m_currentPY.clear();
     for (int i = 0; i < 10; i++) {
-        labCh[i]->setText("");
+        m_labCh[i]->setText("");
     }
 
-    for (int i = currentPY_index; i < currentPY_count; i++) {
+    for (int i = m_currentPY_index; i < m_currentPY_count; i++) {
         if (count == 10) {
             break;
         }
-        QString txt = QString("%1.%2").arg(count).arg(allPY[currentPY_index]);
-        currentPY.append(allPY[currentPY_index]);
-        labCh[count]->setText(txt);
+        QString txt = QString("%1.%2").arg(count).arg(m_allPY[m_currentPY_index]);
+        m_currentPY.append(m_allPY[m_currentPY_index]);
+        m_labCh[count]->setText(txt);
         count++;
-        currentPY_index++;
+        m_currentPY_index++;
     }
     //qDebug() << "currentPY_index:" << currentPY_index << "currentPY_count:" << currentPY_count;
 }
@@ -535,24 +535,24 @@ void frmInput::showChinese()
 void frmInput::btn_clicked()
 {
     //如果当前焦点控件类型为空,则返回不需要继续处理
-    if (currentEditType == "") {
+    if (m_currentEditType == "") {
         return;
     }
 
     QPushButton *btn = (QPushButton *)sender();
     QString objectName = btn->objectName();
     if (objectName == "btnType") {
-        if (currentType == "min") {
-            currentType = "max";
-        } else if (currentType == "max") {
-            currentType = "chinese";
-        } else if (currentType == "chinese") {
-            currentType = "min";
+        if (m_currentType == "min") {
+            m_currentType = "max";
+        } else if (m_currentType == "max") {
+            m_currentType = "chinese";
+        } else if (m_currentType == "chinese") {
+            m_currentType = "min";
         }
-        changeType(currentType);
+        changeType(m_currentType);
     } else if (objectName == "btnDelete") {
         //如果当前是中文模式,则删除对应拼音,删除完拼音之后再删除对应文本输入框的内容
-        if (currentType == "chinese") {
+        if (m_currentType == "chinese") {
             QString txt = ui->labPY->text();
             int len = txt.length();
             if (len > 0) {
@@ -565,25 +565,25 @@ void frmInput::btn_clicked()
             deleteValue();
         }
     } else if (objectName == "btnPre") {
-        if (currentPY_index >= 20) {
+        if (m_currentPY_index >= 20) {
             //每次最多显示10个汉字,所以每次向前的时候索引要减20
-            if (currentPY_index % 10 == 0) {
-                currentPY_index -= 20;
+            if (m_currentPY_index % 10 == 0) {
+                m_currentPY_index -= 20;
             } else {
-                currentPY_index = currentPY_count - (currentPY_count % 10) - 10;
+                m_currentPY_index = m_currentPY_count - (m_currentPY_count % 10) - 10;
             }
         } else {
-            currentPY_index = 0;
+            m_currentPY_index = 0;
         }
         showChinese();
     } else if (objectName == "btnNext") {
-        if (currentPY_index < currentPY_count - 1) {
+        if (m_currentPY_index < m_currentPY_count - 1) {
             showChinese();
         }
     } else if (objectName == "btnClose") {
         this->setVisible(false);
     } else if (objectName == "btnSpace") {
-        if (currentType == "chinese") {
+        if (m_currentType == "chinese") {
             setChinese(0);
         } else {
             insertValue(" ");
@@ -591,16 +591,16 @@ void frmInput::btn_clicked()
     } else if (objectName == "btnEnter") {
         QWidget *widget;
         widget = 0;
-        if (currentEditType == "QLineEdit") {
-            widget = currentLineEdit;
-        } else if (currentEditType == "QTextEdit") {
-            widget = currentTextEdit;
-        } else if (currentEditType == "QPlainTextEdit") {
-            widget = currentPlain;
-        } else if (currentEditType == "QTextBrowser") {
-            widget = currentBrowser;
-        } else if (currentEditType == "QWidget") {
-            widget = currentWidget;
+        if (m_currentEditType == "QLineEdit") {
+            widget = m_currentLineEdit;
+        } else if (m_currentEditType == "QTextEdit") {
+            widget = m_currentTextEdit;
+        } else if (m_currentEditType == "QPlainTextEdit") {
+            widget = m_currentPlain;
+        } else if (m_currentEditType == "QTextBrowser") {
+            widget = m_currentBrowser;
+        } else if (m_currentEditType == "QWidget") {
+            widget = m_currentWidget;
         }
 
         QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_Enter, Qt::NoModifier);
@@ -614,7 +614,7 @@ void frmInput::btn_clicked()
             value = value.right(1);
         }
         //当前不是中文模式,则单击按钮对应text为传递参数
-        if (currentType != "chinese") {
+        if (m_currentType != "chinese") {
             insertValue(value);
         } else {
             //中文模式下,不允许输入特殊字符,单击对应数字按键取得当前索引的汉字
@@ -656,59 +656,59 @@ void frmInput::btn_clicked()
 
 void frmInput::insertValue(QString value)
 {
-    if (currentEditType == "QLineEdit") {
-        currentLineEdit->insert(value);
-    } else if (currentEditType == "QTextEdit") {
-        currentTextEdit->insertPlainText(value);
-    } else if (currentEditType == "QPlainTextEdit") {
-        currentPlain->insertPlainText(value);
-    } else if (currentEditType == "QTextBrowser") {
-        currentBrowser->insertPlainText(value);
-    } else if (currentEditType == "QWidget") {
+    if (m_currentEditType == "QLineEdit") {
+        m_currentLineEdit->insert(value);
+    } else if (m_currentEditType == "QTextEdit") {
+        m_currentTextEdit->insertPlainText(value);
+    } else if (m_currentEditType == "QPlainTextEdit") {
+        m_currentPlain->insertPlainText(value);
+    } else if (m_currentEditType == "QTextBrowser") {
+        m_currentBrowser->insertPlainText(value);
+    } else if (m_currentEditType == "QWidget") {
         QKeyEvent keyPress(QEvent::KeyPress, 0, Qt::NoModifier, QString(value));
-        QApplication::sendEvent(currentWidget, &keyPress);
+        QApplication::sendEvent(m_currentWidget, &keyPress);
     }
 }
 
 void frmInput::deleteValue()
 {
-    if (currentEditType == "QLineEdit") {
-        currentLineEdit->backspace();
-    } else if (currentEditType == "QTextEdit") {
+    if (m_currentEditType == "QLineEdit") {
+        m_currentLineEdit->backspace();
+    } else if (m_currentEditType == "QTextEdit") {
         //获取当前QTextEdit光标,如果光标有选中,则移除选中字符,否则删除光标前一个字符
-        QTextCursor cursor = currentTextEdit->textCursor();
+        QTextCursor cursor = m_currentTextEdit->textCursor();
         if(cursor.hasSelection()) {
             cursor.removeSelectedText();
         } else {
             cursor.deletePreviousChar();
         }
-    } else if (currentEditType == "QPlainTextEdit") {
+    } else if (m_currentEditType == "QPlainTextEdit") {
         //获取当前QTextEdit光标,如果光标有选中,则移除选中字符,否则删除光标前一个字符
-        QTextCursor cursor = currentPlain->textCursor();
+        QTextCursor cursor = m_currentPlain->textCursor();
         if(cursor.hasSelection()) {
             cursor.removeSelectedText();
         } else {
             cursor.deletePreviousChar();
         }
-    } else if (currentEditType == "QTextBrowser") {
+    } else if (m_currentEditType == "QTextBrowser") {
         //获取当前QTextEdit光标,如果光标有选中,则移除选中字符,否则删除光标前一个字符
-        QTextCursor cursor = currentBrowser->textCursor();
+        QTextCursor cursor = m_currentBrowser->textCursor();
         if(cursor.hasSelection()) {
             cursor.removeSelectedText();
         } else {
             cursor.deletePreviousChar();
         }
-    } else if (currentEditType == "QWidget") {
+    } else if (m_currentEditType == "QWidget") {
         QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_Delete, Qt::NoModifier, QString());
-        QApplication::sendEvent(currentWidget, &keyPress);
+        QApplication::sendEvent(m_currentWidget, &keyPress);
     }
 }
 
 void frmInput::setChinese(int index)
 {
-    int count = currentPY.count();
+    int count = m_currentPY.count();
     if (count > index) {
-        insertValue(currentPY[index]);
+        insertValue(m_currentPY[index]);
         //添加完一个汉字后,清空当前汉字信息,等待重新输入
         clearChinese();
         ui->labPY->setText("");
@@ -719,39 +719,39 @@ void frmInput::clearChinese()
 {
     //清空汉字,重置索引
     for (int i = 0; i < 10; i++) {
-        labCh[i]->setText("");
+        m_labCh[i]->setText("");
     }
-    allPY.clear();
-    currentPY.clear();
-    currentPY_index = 0;
-    currentPY_count = 0;
+    m_allPY.clear();
+    m_currentPY.clear();
+    m_currentPY_index = 0;
+    m_currentPY_count = 0;
 }
 
 void frmInput::ChangeStyle()
 {
-    if (currentStyle == "blue") {
+    if (m_currentStyle == "blue") {
         changeStyle("#DEF0FE", "#C0DEF6", "#C0DCF2", "#386487");
-    } else if (currentStyle == "dev") {
+    } else if (m_currentStyle == "dev") {
         changeStyle("#C0D3EB", "#BCCFE7", "#B4C2D7", "#324C6C");
-    } else if (currentStyle == "gray") {
+    } else if (m_currentStyle == "gray") {
         changeStyle("#E4E4E4", "#A2A2A2", "#A9A9A9", "#000000");
-    } else if (currentStyle == "lightgray") {
+    } else if (m_currentStyle == "lightgray") {
         changeStyle("#EEEEEE", "#E5E5E5", "#D4D0C8", "#6F6F6F");
-    } else if (currentStyle == "darkgray") {
+    } else if (m_currentStyle == "darkgray") {
         changeStyle("#D8D9DE", "#C8C8D0", "#A9ACB5", "#5D5C6C");
-    } else if (currentStyle == "black") {
+    } else if (m_currentStyle == "black") {
         changeStyle("#4D4D4D", "#292929", "#D9D9D9", "#CACAD0");
-    } else if (currentStyle == "brown") {
+    } else if (m_currentStyle == "brown") {
         changeStyle("#667481", "#566373", "#C2CCD8", "#E7ECF0");
-    } else if (currentStyle == "silvery") {
+    } else if (m_currentStyle == "silvery") {
         changeStyle("#E1E4E6", "#CCD3D9", "#B2B6B9", "#000000");
     }
 }
 
 void frmInput::ChangeFont()
 {
-    QFont btnFont(this->font().family(), btnFontSize);
-    QFont labFont(this->font().family(), labFontSize);
+    QFont btnFont(this->font().family(), m_btnFontSize);
+    QFont labFont(this->font().family(), m_labFontSize);
 
     QList<QPushButton *> btns = ui->widgetMain->findChildren<QPushButton *>();
     foreach (QPushButton * btn, btns) {

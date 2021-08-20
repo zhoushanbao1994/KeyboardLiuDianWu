@@ -43,7 +43,8 @@ int main(int argc, char *argv[])
     //frmNum::Instance()->Init("black", 10);
 
     frmMain w;
-    w.showMaximized();
+    //w.showMaximized();
+    w.show();
 
     return a.exec();
 }
