@@ -8,9 +8,9 @@ frmInput::frmInput(QWidget *parent) :
     ui(new Ui::frmInput)
 {
     ui->setupUi(this);
-    this->InitProperty();
-    this->InitForm();
-    this->ChangeStyle();
+    this->InitProperty();       // 初始化按键属性
+    this->InitForm();           // 初始化窗体数据
+    this->ChangeStyle();        // 改变样式
 }
 
 frmInput::~frmInput()
@@ -18,16 +18,18 @@ frmInput::~frmInput()
     delete ui;
 }
 
+// 初始化面板状态,包括字体大小
 void frmInput::Init(QString position, QString style, int btnFontSize, int labFontSize)
 {
-    this->m_currentPosition = position;
-    this->m_currentStyle = style;
-    this->m_btnFontSize = btnFontSize;
-    this->m_labFontSize = labFontSize;
-    this->ChangeStyle();
-    this->ChangeFont();
+    this->m_currentPosition = position; // 当前输入法面板位置类型
+    this->m_currentStyle = style;       // 当前输入法面板样式
+    this->m_btnFontSize = btnFontSize;  // 当前输入法面板按钮字体大小
+    this->m_labFontSize = labFontSize;  // 当前输入法面板标签字体大小
+    this->ChangeStyle();                // 改变样式
+    this->ChangeFont();                 // 改变字体大小
 }
 
+// 鼠标拖动事件
 void frmInput::mouseMoveEvent(QMouseEvent *e)
 {
     if (m_mousePressed && (e->buttons() && Qt::LeftButton)) {
@@ -36,6 +38,7 @@ void frmInput::mouseMoveEvent(QMouseEvent *e)
     }
 }
 
+// 鼠标按下事件
 void frmInput::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton) {
@@ -45,6 +48,7 @@ void frmInput::mousePressEvent(QMouseEvent *e)
     }
 }
 
+// 鼠标松开事件
 void frmInput::mouseReleaseEvent(QMouseEvent *)
 {
     m_mousePressed = false;
@@ -52,15 +56,20 @@ void frmInput::mouseReleaseEvent(QMouseEvent *)
 
 void frmInput::InitForm()
 {
+    // 鼠标是否按下
     this->m_mousePressed = false;
+    // 设置窗口属性
     this->setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 
+    // 桌面尺寸
     QDesktopWidget w;
     m_deskWidth = w.availableGeometry().width();
     m_deskHeight = w.availableGeometry().height();
+    // 窗口尺寸
     m_frmWidth = this->width();
     m_frmHeight = this->height();
 
+    // 加载数据库（汉字）
     QSqlDatabase DbConn;
     DbConn = QSqlDatabase::addDatabase("QSQLITE", "py");
     DbConn.setDatabaseName(qApp->applicationDirPath() + "/py.db");
@@ -107,6 +116,7 @@ void frmInput::InitForm()
     qApp->installEventFilter(this);
 }
 
+// 初始化属性
 void frmInput::InitProperty()
 {
     ui->btnOther1->setProperty("btnOther", true);
@@ -175,6 +185,7 @@ void frmInput::InitProperty()
     ui->btny->setProperty("btnLetter", true);
     ui->btnz->setProperty("btnLetter", true);
 
+    // 汉字标签数组
     m_labCh.append(ui->labCh0);
     m_labCh.append(ui->labCh1);
     m_labCh.append(ui->labCh2);
@@ -186,15 +197,19 @@ void frmInput::InitProperty()
     m_labCh.append(ui->labCh8);
     m_labCh.append(ui->labCh9);
     for (int i = 0; i < 10; i++) {
+        // 安装事件过滤器
         m_labCh[i]->installEventFilter(this);
     }
 }
 
+// 显示输入法面板
 void frmInput::ShowPanel()
 {
+    // 设置窗口可见
     this->setVisible(true);
     int width = ui->btn0->width();
     width = width > 60 ? width : 60;
+    // 设置按键大小
     ui->btnPre->setMinimumWidth(width);
     ui->btnPre->setMaximumWidth(width);
     ui->btnNext->setMinimumWidth(width);
@@ -206,7 +221,11 @@ void frmInput::ShowPanel()
 //事件过滤器,用于识别鼠标单击汉字标签处获取对应汉字
 bool frmInput::eventFilter(QObject *obj, QEvent *event)
 {
+    /*******************************************************/
+    /*********************** 鼠标按下 ***********************/
+    /*******************************************************/
     if (event->type() == QEvent::MouseButtonPress) {
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "按键按下";
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
         if (mouseEvent->button() == Qt::LeftButton) {
             if (obj == ui->labCh0) {
@@ -244,14 +263,24 @@ bool frmInput::eventFilter(QObject *obj, QEvent *event)
             }
             return false;
         }
-    } else if (event->type() == QEvent::MouseButtonRelease) {
+    }
+    /*******************************************************/
+    /*********************** 鼠标松开 ***********************/
+    /*******************************************************/
+    else if (event->type() == QEvent::MouseButtonRelease) {
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "按键松开";
         m_btnPress = (QPushButton *)obj;
         if (checkPress()) {
             m_isPress = false;
             m_timerPress->stop();
         }
         return false;
-    } else if (event->type() == QEvent::KeyPress) {
+    }
+    /*******************************************************/
+    /*********************** 键盘按键 ***********************/
+    /*******************************************************/
+    else if (event->type() == QEvent::KeyPress) {
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "键盘按键";
         //如果输入法窗体不可见,则不需要处理
         if (!isVisible()) {
             return QWidget::eventFilter(obj, event);
@@ -340,6 +369,7 @@ bool frmInput::checkPress()
     return false;
 }
 
+// 定时器处理退格键
 void frmInput::reClicked()
 {
     if (m_isPress) {
@@ -348,6 +378,7 @@ void frmInput::reClicked()
     }
 }
 
+// 焦点改变事件槽函数处理
 void frmInput::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
 {
     //qDebug() << "oldWidget:" << oldWidget << " nowWidget:" << nowWidget;
@@ -440,6 +471,7 @@ void frmInput::focusChanged(QWidget *oldWidget, QWidget *nowWidget)
     }
 }
 
+// 改变输入法类型
 void frmInput::changeType(QString type)
 {
     if (type == "max") {
@@ -475,20 +507,22 @@ void frmInput::changeType(QString type)
     ui->labPY->setText("");
 }
 
+// 改变字母大小写
 void frmInput::changeLetter(bool isUpper)
 {
     QList<QPushButton *> btn = this->findChildren<QPushButton *>();
     foreach (QPushButton * b, btn) {
         if (b->property("btnLetter").toBool()) {
             if (isUpper) {
-                b->setText(b->text().toUpper());
+                b->setText(b->text().toUpper());    // 转为大写
             } else {
-                b->setText(b->text().toLower());
+                b->setText(b->text().toLower());    // 转为小写
             }
         }
     }
 }
 
+// 查询汉字
 void frmInput::selectChinese()
 {
     clearChinese();
@@ -510,6 +544,7 @@ void frmInput::selectChinese()
     showChinese();
 }
 
+// 显示查询到的汉字
 void frmInput::showChinese()
 {
     //每个版面最多显示10个汉字
@@ -532,6 +567,7 @@ void frmInput::showChinese()
     //qDebug() << "currentPY_index:" << currentPY_index << "currentPY_count:" << currentPY_count;
 }
 
+// 输入法面板按键处理
 void frmInput::btn_clicked()
 {
     //如果当前焦点控件类型为空,则返回不需要继续处理
@@ -654,6 +690,7 @@ void frmInput::btn_clicked()
     }
 }
 
+// 插入值到当前焦点控件
 void frmInput::insertValue(QString value)
 {
     if (m_currentEditType == "QLineEdit") {
@@ -670,6 +707,7 @@ void frmInput::insertValue(QString value)
     }
 }
 
+// 删除当前焦点控件的一个字符
 void frmInput::deleteValue()
 {
     if (m_currentEditType == "QLineEdit") {
@@ -704,6 +742,7 @@ void frmInput::deleteValue()
     }
 }
 
+// 设置当前汉字
 void frmInput::setChinese(int index)
 {
     int count = m_currentPY.count();
@@ -715,6 +754,7 @@ void frmInput::setChinese(int index)
     }
 }
 
+// 清空当前汉字信息
 void frmInput::clearChinese()
 {
     //清空汉字,重置索引
@@ -748,6 +788,7 @@ void frmInput::ChangeStyle()
     }
 }
 
+// 改变字体大小
 void frmInput::ChangeFont()
 {
     QFont btnFont(this->font().family(), m_btnFontSize);
@@ -767,6 +808,7 @@ void frmInput::ChangeFont()
     ui->btnClose->setFont(labFont);
 }
 
+// 改变输入法面板样式
 void frmInput::changeStyle(QString topColor, QString bottomColor, QString borderColor, QString textColor)
 {
     QStringList qss;
